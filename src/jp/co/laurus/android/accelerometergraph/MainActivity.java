@@ -25,26 +25,27 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.format.DateFormat;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+/**
+ * 
+ * @author okumura.laurus@gmail.com
+ *
+ */
 public class MainActivity extends Activity {
 
 	private static final String TAG = "Accelerometer Graph";
@@ -61,8 +62,6 @@ public class MainActivity extends Activity {
 	private static final int MENU_SENSOR_DELAY = (Menu.FIRST + 1);
 	private static final int MENU_SAVE = (Menu.FIRST + 2);
 	private static final int MENU_END = (Menu.FIRST + 3);
-
-	private static final int MAX_RAW_HISTORY_SIZE = 100000;
 
 	private static final int DIALOG_SAVE_PROGRESS = 0;
 
@@ -96,6 +95,7 @@ public class MainActivity extends Activity {
 	private int mStatus = STATUS_START;
 	private int mPassFilter = PASS_FILTER_RAW;
 	private float mFilterRate = 0.1f;
+	private boolean mRecording = true;
 
 	private SensorEventListener mSensorEventListener = new SensorEventListener() {
 		@Override
@@ -108,10 +108,9 @@ public class MainActivity extends Activity {
 			Log.i(TAG, "mSensorEventListener.onSensorChanged()");
 
 			// RAW履歴を登録
-			if (mRawHistory.size() >= MAX_RAW_HISTORY_SIZE) {
-				mRawHistory.poll();
+			if (mRecording) {
+				mRawHistory.add(event.values.clone());
 			}
-			mRawHistory.add(event.values.clone());
 
 			for (int angle = 0; angle < 3; angle++) {
 				float value = event.values[angle];
@@ -227,120 +226,86 @@ public class MainActivity extends Activity {
 
 		// グラフビューをフレームレイアウトに追加
 		mGraphView = new GraphView(this);
-		frame.addView(mGraphView);
+		frame.addView(mGraphView, 0);
 
-		// リニアレイアウトをフレームレイアウトに追加
-		LinearLayout linearLayout = new LinearLayout(this);
-		linearLayout.setOrientation(LinearLayout.VERTICAL);
-		frame.addView(linearLayout);
-
-		// アングルレイアウトをリニアレイアウトに追加
-		LinearLayout anglesLayout = new LinearLayout(this);
-		anglesLayout.setOrientation(LinearLayout.HORIZONTAL);
-		linearLayout.addView(anglesLayout);
-
-		// アングルチェックボックスと加速度値ビューをアングルレイアウトに追加
-		int[] labels = { R.string.accele_x_label, R.string.accele_y_label,
-				R.string.accele_z_label, R.string.accele_r_label };
+		// チェックボックスにリスナーをセット
+		CheckBox[] checkboxes = new CheckBox[4];
+		checkboxes[SensorManager.DATA_X] = (CheckBox) findViewById(R.id.accele_x);
+		checkboxes[SensorManager.DATA_Y] = (CheckBox) findViewById(R.id.accele_y);
+		checkboxes[SensorManager.DATA_Z] = (CheckBox) findViewById(R.id.accele_z);
+		checkboxes[DATA_R] = (CheckBox) findViewById(R.id.accele_r);
 		for (int i = 0; i < 4; i++) {
-			CheckBox checkbox = new CheckBox(this);
-			checkbox.setText(labels[i]);
-			checkbox.setTextColor(mAngleColors[i]);
-			checkbox.setTextSize(20);
 			if (mGraphs[i]) {
-				checkbox.setChecked(true);
+				checkboxes[i].setChecked(true);
 			}
-			final int angle = i;
-			checkbox
-					.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-						@Override
-						public void onCheckedChanged(CompoundButton buttonView,
-								boolean isChecked) {
-							mGraphs[angle] = isChecked;
-						}
-					});
-			anglesLayout.addView(checkbox);
-			mAccValueViews[i] = new TextView(this);
-			mAccValueViews[i].setWidth(95);
-			mAccValueViews[i].setPadding(3, 0, 0, 0);
-			anglesLayout.addView(mAccValueViews[i]);
+			checkboxes[i].setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+				@Override
+				public void onCheckedChanged(CompoundButton buttonView,
+						boolean isChecked) {
+					switch (buttonView.getId()) {
+					case R.id.accele_x:
+						mGraphs[SensorManager.DATA_X] = isChecked;
+						break;
+					case R.id.accele_y:
+						mGraphs[SensorManager.DATA_Y] = isChecked;
+						break;
+					case R.id.accele_z:
+						mGraphs[SensorManager.DATA_Z] = isChecked;
+						break;
+					case R.id.accele_r:
+						mGraphs[DATA_R] = isChecked;
+						break;
+					}
+				}
+			});
 		}
-
-		// フィルタレイアウトをリニアレイアウトに追加
-		LinearLayout filterLayout = new LinearLayout(this);
-		filterLayout.setOrientation(LinearLayout.HORIZONTAL);
-		filterLayout.setGravity(Gravity.CENTER_VERTICAL);
-		linearLayout.addView(filterLayout, new LinearLayout.LayoutParams(
-				ViewGroup.LayoutParams.FILL_PARENT,
-				ViewGroup.LayoutParams.WRAP_CONTENT));
-
-		// パスフィルタ選択ラジオボタンをフィルタレイアウトに追加
-		final RadioButton passFilterRawBtn = new RadioButton(this);
-		passFilterRawBtn.setWidth(80);
-		passFilterRawBtn.setText("RAW");
-
-		final RadioButton passFilterLowBtn = new RadioButton(this);
-		passFilterLowBtn.setWidth(80);
-		passFilterLowBtn.setText("LOW");
-
-		final RadioButton passFilterHighBtn = new RadioButton(this);
-		passFilterHighBtn.setWidth(80);
-		passFilterHighBtn.setText("HIGH");
-
-		RadioGroup passFilterGroup = new RadioGroup(this);
-		passFilterGroup.setOrientation(RadioGroup.HORIZONTAL);
-		passFilterGroup.addView(passFilterRawBtn);
-		passFilterGroup.addView(passFilterLowBtn);
-		passFilterGroup.addView(passFilterHighBtn);
-		passFilterGroup
-				.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-					@Override
-					public void onCheckedChanged(RadioGroup group, int checkedId) {
-						if (checkedId == passFilterRawBtn.getId()) {
-							mPassFilter = PASS_FILTER_RAW;
-						} else if (checkedId == passFilterLowBtn.getId()) {
-							mPassFilter = PASS_FILTER_LOW;
-						} else if (checkedId == passFilterHighBtn.getId()) {
-							mPassFilter = PASS_FILTER_HIGH;
-						}
-					}
-				});
-		passFilterGroup.check(passFilterRawBtn.getId());
-		filterLayout.addView(passFilterGroup);
-
-		// Filter rate を表示
-		mFilterRateView = new TextView(this);
+		
+		mAccValueViews[SensorManager.DATA_X] = (TextView) findViewById(R.id.accele_x_value);
+		mAccValueViews[SensorManager.DATA_Y] = (TextView) findViewById(R.id.accele_y_value);
+		mAccValueViews[SensorManager.DATA_Z] = (TextView) findViewById(R.id.accele_z_value);
+		mAccValueViews[DATA_R] = (TextView) findViewById(R.id.accele_r_value);
+		
+		RadioGroup passFilterGroup = (RadioGroup) findViewById(R.id.pass_filter);
+		passFilterGroup.check(R.id.pass_filter_raw);
+		passFilterGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+			@Override
+			public void onCheckedChanged(RadioGroup group, int checkedId) {
+				switch (checkedId) {
+				case R.id.pass_filter_raw:
+					mPassFilter = PASS_FILTER_RAW;
+					break;
+				case R.id.pass_filter_low:
+					mPassFilter = PASS_FILTER_LOW;
+					break;
+				case R.id.pass_filter_high:
+					mPassFilter = PASS_FILTER_HIGH;
+					break;
+				}
+			}
+		});
+		
+		mFilterRateView = (TextView) findViewById(R.id.filter_rate_value);
 		mFilterRateView.setText(String.valueOf(mFilterRate));
-		mFilterRateView.setWidth(40);
-		mFilterRateView.setPadding(10, 0, 0, 0);
-		mFilterRateView.setGravity(Gravity.RIGHT);
-		filterLayout.addView(mFilterRateView);
+		
+		SeekBar filterRateBar = (SeekBar) findViewById(R.id.filter_rate);
+		filterRateBar.setMax(100);
+		filterRateBar.setProgress((int) (mFilterRate * 100));
+		filterRateBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress,
+					boolean fromUser) {
+				mFilterRate = (float) progress / 100;
+				mFilterRateView.setText(String.valueOf(mFilterRate));
+			}
 
-		// シークバーをフィルタレイアウトに追加
-		SeekBar seekbar = new SeekBar(this);
-		seekbar.setMax(100);
-		seekbar.setProgress((int) (mFilterRate * 100));
-		seekbar
-				.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-					@Override
-					public void onProgressChanged(SeekBar seekBar,
-							int progress, boolean fromUser) {
-						mFilterRate = (float) progress / 100;
-						mFilterRateView.setText(String.valueOf(mFilterRate));
-					}
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar) {
+			}
 
-					@Override
-					public void onStartTrackingTouch(SeekBar seekBar) {
-					}
-
-					@Override
-					public void onStopTrackingTouch(SeekBar seekBar) {
-					}
-				});
-		seekbar.setPadding(3, 0, 5, 0);
-		filterLayout.addView(seekbar, new LinearLayout.LayoutParams(
-				ViewGroup.LayoutParams.FILL_PARENT,
-				ViewGroup.LayoutParams.WRAP_CONTENT));
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar) {
+			}
+		});
 	}
 
 	@Override
