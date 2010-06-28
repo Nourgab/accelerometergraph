@@ -1,7 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/frame"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    >
+	android:id="@+id/frame" android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+
+	<LinearLayout android:layout_width="fill_parent"
+		android:layout_height="fill_parent" android:orientation="vertical">
+
+		<LinearLayout android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:orientation="horizontal">
+
+			<CheckBox android:text="@string/accele_x_label" android:id="@+id/accele_x"
+				style="@style/accele_checkbox" android:textColor="@color/accele_x"></CheckBox>
+			<TextView android:id="@+id/accele_x_value" style="@style/accele_value"></TextView>
+
+			<CheckBox android:text="@string/accele_y_label" android:id="@+id/accele_y"
+				style="@style/accele_checkbox" android:textColor="@color/accele_y"></CheckBox>
+			<TextView android:id="@+id/accele_y_value" style="@style/accele_value"></TextView>
+
+			<CheckBox android:text="@string/accele_z_label" android:id="@+id/accele_z"
+				style="@style/accele_checkbox" android:textColor="@color/accele_z"></CheckBox>
+			<TextView android:id="@+id/accele_z_value" style="@style/accele_value"></TextView>
+
+			<CheckBox android:text="@string/accele_r_label" android:id="@+id/accele_r"
+				style="@style/accele_checkbox" android:textColor="@color/accele_r"></CheckBox>
+			<TextView android:id="@+id/accele_r_value" style="@style/accele_value"></TextView>
+
+		</LinearLayout>
+
+		<LinearLayout android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:orientation="horizontal"
+			android:layout_gravity="center_vertical" android:gravity="center_vertical">
+
+			<RadioGroup android:id="@+id/pass_filter"
+				android:orientation="horizontal" android:layout_width="wrap_content"
+				android:layout_height="wrap_content">
+
+				<RadioButton android:id="@+id/pass_filter_raw"
+					android:text="RAW" style="@style/pass_filter"></RadioButton>
+				<RadioButton android:id="@+id/pass_filter_low"
+					android:text="LOW" style="@style/pass_filter"></RadioButton>
+				<RadioButton android:id="@+id/pass_filter_high"
+					android:text="HIGH" style="@style/pass_filter"></RadioButton>
+
+			</RadioGroup>
+
+			<TextView android:id="@+id/filter_rate_value"
+				android:layout_width="40px" android:layout_height="wrap_content"
+				android:gravity="right" android:paddingLeft="3px"
+				android:paddingRight="3px"></TextView>
+
+			<SeekBar android:id="@+id/filter_rate" android:layout_width="fill_parent"
+				android:layout_height="wrap_content"></SeekBar>
+
+		</LinearLayout>
+
+	</LinearLayout>
+
 </FrameLayout>

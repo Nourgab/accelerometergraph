@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<style name="accele_value"><item name="android:layout_width">95px</item>
+<item name="android:layout_height">wrap_content</item>
+<item name="android:paddingLeft">3px</item>
+</style>
+<style name="pass_filter"><item name="android:layout_width">80px</item>
+<item name="android:layout_height">wrap_content</item>
+</style>
+<style name="accele_checkbox"><item name="android:layout_width">wrap_content</item>
+<item name="android:layout_height">wrap_content</item>
+
+
+<item name="android:textSize">20px</item>
+</style>
+</resources>
