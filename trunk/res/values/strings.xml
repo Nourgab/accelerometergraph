@@ -2,4 +2,12 @@
 <resources>
     
     <string name="app_name">加速度センサーグラフ</string>
+<string name="accele_x_label">X</string>
+<string name="accele_y_label">Y</string>
+<string name="accele_z_label">Z</string>
+<string name="accele_r_label">R</string>
+<string name="sensor_delay_label">Sensor Delay</string>
+<string name="save_label">保存</string>
+<string name="end_label">終了</string>
+<string name="save_complate">保存しました</string>
 </resources>
