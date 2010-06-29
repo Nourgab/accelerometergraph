@@ -96,6 +96,7 @@ public class MainActivity extends Activity {
 	private int mPassFilter = PASS_FILTER_RAW;
 	private float mFilterRate = 0.1f;
 	private boolean mRecording = false;
+	private long mRecTime = 0;
 
 	private SensorEventListener mSensorEventListener = new SensorEventListener() {
 		@Override
@@ -168,8 +169,9 @@ public class MainActivity extends Activity {
 
 			Bundle data = msg.getData();
 			if (data.getBoolean("success")) {
-				// RAW履歴を初期化
+				// RAW履歴と記録開始時間を初期化
 				mRawHistory = new ConcurrentLinkedQueue<float[]>();
+				mRecTime = 0;
 			}
 
 			Toast.makeText(MainActivity.this, data.getString("msg"),
@@ -192,7 +194,7 @@ public class MainActivity extends Activity {
 			mGraphView.surfaceCreated(mGraphView.getHolder());
 		}
 	}
-	
+
 	private void stopGraph() {
 		// センサーリスナーを解除
 		mSensorManager.unregisterListener(mSensorEventListener);
@@ -302,7 +304,7 @@ public class MainActivity extends Activity {
 
 		// Filter rate 表示用TextViewを取得
 		mFilterRateView = (TextView) findViewById(R.id.filter_rate_value);
-		mFilterRateView.setText(String.valueOf(mFilterRate));
+		mFilterRateView.setText(String.valueOf((int) (mFilterRate * 100)) + "%");
 
 		// Filter rate 変更シークバーにリスナーを登録
 		SeekBar filterRateBar = (SeekBar) findViewById(R.id.filter_rate);
@@ -314,7 +316,7 @@ public class MainActivity extends Activity {
 					public void onProgressChanged(SeekBar seekBar,
 							int progress, boolean fromUser) {
 						mFilterRate = (float) progress / 100;
-						mFilterRateView.setText(String.valueOf(mFilterRate));
+						mFilterRateView.setText(String.valueOf(progress) + "%");
 					}
 
 					@Override
@@ -375,8 +377,6 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onDestroy() {
 		Log.i(TAG, "MainActivity.onDestroy()");
-
-		// TODO 自分のプロセスをキル
 
 		super.onDestroy();
 	}
@@ -488,8 +488,10 @@ public class MainActivity extends Activity {
 			selectSensorDelay();
 			break;
 		case MENU_START_SAVE:
+			mRecTime = System.currentTimeMillis();
 			mRecording = true;
-			Toast.makeText(this, R.string.start_save_msg, Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, R.string.start_save_msg, Toast.LENGTH_SHORT)
+					.show();
 			break;
 		case MENU_SAVE:
 			saveHistory();
@@ -503,7 +505,8 @@ public class MainActivity extends Activity {
 
 	private void selectSensorDelay() {
 		final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-		final CharSequence[] delays = { "FASTEST", "GAME", "UI", "NORMAL" };
+		final CharSequence[] delays = { "FASTEST(20ms)", "GAME(40ms)",
+				"UI(80ms)", "NORMAL(220ms)" };
 		dialogBuilder.setItems(delays, new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
@@ -747,10 +750,16 @@ public class MainActivity extends Activity {
 					dir.mkdirs();
 				}
 
+				// CSVファイル名を作成
+				StringBuilder fileName = new StringBuilder();
+				fileName.append(DateFormat.format("yyyyMMddkkmmss", mRecTime));
+				fileName.append("-");
+				fileName.append(DateFormat.format("yyyyMMddkkmmss", System
+						.currentTimeMillis()));
+				fileName.append(".csv");
+
 				// CSVファイルへ保存
-				String fileName = DateFormat.format("yyyy-MM-dd-kk-mm-ss",
-						System.currentTimeMillis()).toString().concat(".csv");
-				File file = new File(dirPath, fileName);
+				File file = new File(dirPath, fileName.toString());
 				if (file.createNewFile()) {
 					FileOutputStream fileOutputStream = new FileOutputStream(
 							file);
