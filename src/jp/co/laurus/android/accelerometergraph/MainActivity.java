@@ -44,7 +44,7 @@ import android.widget.Toast;
 /**
  * 
  * @author okumura.laurus@gmail.com
- *
+ * 
  */
 public class MainActivity extends Activity {
 
@@ -60,8 +60,9 @@ public class MainActivity extends Activity {
 	private static final int PASS_FILTER_HIGH = 2;
 
 	private static final int MENU_SENSOR_DELAY = (Menu.FIRST + 1);
-	private static final int MENU_SAVE = (Menu.FIRST + 2);
-	private static final int MENU_END = (Menu.FIRST + 3);
+	private static final int MENU_START_SAVE = (Menu.FIRST + 2);
+	private static final int MENU_SAVE = (Menu.FIRST + 3);
+	private static final int MENU_END = (Menu.FIRST + 4);
 
 	private static final int DIALOG_SAVE_PROGRESS = 0;
 
@@ -81,7 +82,6 @@ public class MainActivity extends Activity {
 	private TextView mFilterRateView;
 	private SensorManager mSensorManager;
 	private Sensor mAccelerometer;
-	private ProgressDialog mSaveProgress;
 
 	private int mSensorDelay = SensorManager.SENSOR_DELAY_UI;
 	private int mMaxHistorySize;
@@ -95,7 +95,7 @@ public class MainActivity extends Activity {
 	private int mStatus = STATUS_START;
 	private int mPassFilter = PASS_FILTER_RAW;
 	private float mFilterRate = 0.1f;
-	private boolean mRecording = true;
+	private boolean mRecording = false;
 
 	private SensorEventListener mSensorEventListener = new SensorEventListener() {
 		@Override
@@ -238,74 +238,77 @@ public class MainActivity extends Activity {
 			if (mGraphs[i]) {
 				checkboxes[i].setChecked(true);
 			}
-			checkboxes[i].setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-				@Override
-				public void onCheckedChanged(CompoundButton buttonView,
-						boolean isChecked) {
-					switch (buttonView.getId()) {
-					case R.id.accele_x:
-						mGraphs[SensorManager.DATA_X] = isChecked;
-						break;
-					case R.id.accele_y:
-						mGraphs[SensorManager.DATA_Y] = isChecked;
-						break;
-					case R.id.accele_z:
-						mGraphs[SensorManager.DATA_Z] = isChecked;
-						break;
-					case R.id.accele_r:
-						mGraphs[DATA_R] = isChecked;
-						break;
-					}
-				}
-			});
+			checkboxes[i]
+					.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+						@Override
+						public void onCheckedChanged(CompoundButton buttonView,
+								boolean isChecked) {
+							switch (buttonView.getId()) {
+							case R.id.accele_x:
+								mGraphs[SensorManager.DATA_X] = isChecked;
+								break;
+							case R.id.accele_y:
+								mGraphs[SensorManager.DATA_Y] = isChecked;
+								break;
+							case R.id.accele_z:
+								mGraphs[SensorManager.DATA_Z] = isChecked;
+								break;
+							case R.id.accele_r:
+								mGraphs[DATA_R] = isChecked;
+								break;
+							}
+						}
+					});
 		}
-		
+
 		mAccValueViews[SensorManager.DATA_X] = (TextView) findViewById(R.id.accele_x_value);
 		mAccValueViews[SensorManager.DATA_Y] = (TextView) findViewById(R.id.accele_y_value);
 		mAccValueViews[SensorManager.DATA_Z] = (TextView) findViewById(R.id.accele_z_value);
 		mAccValueViews[DATA_R] = (TextView) findViewById(R.id.accele_r_value);
-		
+
 		RadioGroup passFilterGroup = (RadioGroup) findViewById(R.id.pass_filter);
 		passFilterGroup.check(R.id.pass_filter_raw);
-		passFilterGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-			@Override
-			public void onCheckedChanged(RadioGroup group, int checkedId) {
-				switch (checkedId) {
-				case R.id.pass_filter_raw:
-					mPassFilter = PASS_FILTER_RAW;
-					break;
-				case R.id.pass_filter_low:
-					mPassFilter = PASS_FILTER_LOW;
-					break;
-				case R.id.pass_filter_high:
-					mPassFilter = PASS_FILTER_HIGH;
-					break;
-				}
-			}
-		});
-		
+		passFilterGroup
+				.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+					@Override
+					public void onCheckedChanged(RadioGroup group, int checkedId) {
+						switch (checkedId) {
+						case R.id.pass_filter_raw:
+							mPassFilter = PASS_FILTER_RAW;
+							break;
+						case R.id.pass_filter_low:
+							mPassFilter = PASS_FILTER_LOW;
+							break;
+						case R.id.pass_filter_high:
+							mPassFilter = PASS_FILTER_HIGH;
+							break;
+						}
+					}
+				});
+
 		mFilterRateView = (TextView) findViewById(R.id.filter_rate_value);
 		mFilterRateView.setText(String.valueOf(mFilterRate));
-		
+
 		SeekBar filterRateBar = (SeekBar) findViewById(R.id.filter_rate);
 		filterRateBar.setMax(100);
 		filterRateBar.setProgress((int) (mFilterRate * 100));
-		filterRateBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-			@Override
-			public void onProgressChanged(SeekBar seekBar, int progress,
-					boolean fromUser) {
-				mFilterRate = (float) progress / 100;
-				mFilterRateView.setText(String.valueOf(mFilterRate));
-			}
+		filterRateBar
+				.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+					@Override
+					public void onProgressChanged(SeekBar seekBar,
+							int progress, boolean fromUser) {
+						mFilterRate = (float) progress / 100;
+						mFilterRateView.setText(String.valueOf(mFilterRate));
+					}
 
-			@Override
-			public void onStartTrackingTouch(SeekBar seekBar) {
-			}
+					@Override
+					public void onStartTrackingTouch(SeekBar seekBar) {
+					}
 
-			@Override
-			public void onStopTrackingTouch(SeekBar seekBar) {
-			}
-		});
+					@Override
+					public void onStopTrackingTouch(SeekBar seekBar) {
+					}
+				});
 	}
 
 	@Override
@@ -458,14 +461,27 @@ public class MainActivity extends Activity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		menu.add(Menu.NONE, MENU_SENSOR_DELAY, Menu.NONE,
-				R.string.sensor_delay_label);
-		menu.add(Menu.NONE, MENU_SAVE, Menu.NONE, R.string.save_label);
-		menu.add(Menu.NONE, MENU_END, Menu.NONE, R.string.end_label);
+				R.string.sensor_delay_label).setIcon(
+				android.R.drawable.ic_menu_rotate);
+		menu.add(Menu.NONE, MENU_START_SAVE, Menu.NONE,
+				R.string.start_save_label).setIcon(
+				android.R.drawable.ic_menu_recent_history);
+		menu.add(Menu.NONE, MENU_SAVE, Menu.NONE, R.string.save_label).setIcon(
+				android.R.drawable.ic_menu_save);
+		menu.add(Menu.NONE, MENU_END, Menu.NONE, R.string.end_label).setIcon(
+				android.R.drawable.ic_menu_close_clear_cancel);
 		return super.onCreateOptionsMenu(menu);
 	}
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
+		if (mRecording) {
+			menu.findItem(MENU_START_SAVE).setVisible(false);
+			menu.findItem(MENU_SAVE).setVisible(true);
+		} else {
+			menu.findItem(MENU_START_SAVE).setVisible(true);
+			menu.findItem(MENU_SAVE).setVisible(false);
+		}
 		return super.onPrepareOptionsMenu(menu);
 	}
 
@@ -474,6 +490,10 @@ public class MainActivity extends Activity {
 		switch (item.getItemId()) {
 		case MENU_SENSOR_DELAY:
 			selectSensorDelay();
+			break;
+		case MENU_START_SAVE:
+			mRecording = true;
+			Toast.makeText(this, R.string.start_save_msg, Toast.LENGTH_SHORT).show();
 			break;
 		case MENU_SAVE:
 			saveHistory();
@@ -517,6 +537,9 @@ public class MainActivity extends Activity {
 	}
 
 	private void saveHistory() {
+		// レコーディングを停止
+		mRecording = false;
+
 		// センサーリスナー停止
 		mSensorManager.unregisterListener(mSensorEventListener);
 
@@ -535,15 +558,15 @@ public class MainActivity extends Activity {
 	protected Dialog onCreateDialog(int id) {
 		switch (id) {
 		case DIALOG_SAVE_PROGRESS:
-			mSaveProgress = new ProgressDialog(this);
-			mSaveProgress.setTitle("保存中");
-			mSaveProgress.setMessage("履歴を保存しています");
-			mSaveProgress.setIndeterminate(false);
-			mSaveProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-			mSaveProgress.setMax(100);
-			mSaveProgress.setCancelable(false);
-			mSaveProgress.show();
-			return mSaveProgress;
+			ProgressDialog saveProgress = new ProgressDialog(this);
+			saveProgress.setTitle("保存中");
+			saveProgress.setMessage("履歴を保存しています");
+			saveProgress.setIndeterminate(false);
+			saveProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+			saveProgress.setMax(100);
+			saveProgress.setCancelable(false);
+			saveProgress.show();
+			return saveProgress;
 		}
 		return super.onCreateDialog(id);
 	}
@@ -624,7 +647,7 @@ public class MainActivity extends Activity {
 
 			while (mDrawRoop) {
 				Canvas canvas = mHolder.lockCanvas();
-				
+
 				if (canvas == null) {
 					break;
 				}
