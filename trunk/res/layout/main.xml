@@ -37,20 +37,27 @@
 
 				<RadioButton android:id="@+id/pass_filter_raw"
 					android:text="RAW" style="@style/pass_filter"></RadioButton>
+
 				<RadioButton android:id="@+id/pass_filter_low"
 					android:text="LOW" style="@style/pass_filter"></RadioButton>
+
 				<RadioButton android:id="@+id/pass_filter_high"
 					android:text="HIGH" style="@style/pass_filter"></RadioButton>
 
 			</RadioGroup>
 
-			<TextView android:id="@+id/filter_rate_value"
-				android:layout_width="40px" android:layout_height="wrap_content"
-				android:gravity="right" android:paddingLeft="3px"
-				android:paddingRight="3px"></TextView>
+			<FrameLayout android:layout_width="fill_parent"
+				android:layout_height="wrap_content">
 
-			<SeekBar android:id="@+id/filter_rate" android:layout_width="fill_parent"
-				android:layout_height="wrap_content"></SeekBar>
+				<SeekBar android:id="@+id/filter_rate" android:layout_width="fill_parent"
+					android:layout_height="wrap_content" android:paddingLeft="3px" android:paddingRight="3px"></SeekBar>
+
+				<TextView android:id="@+id/filter_rate_value"
+					android:layout_width="fill_parent" android:layout_height="28px"
+					android:gravity="center_horizontal|center_vertical"
+					android:textColor="@color/filter_rate_value"></TextView>
+
+			</FrameLayout>
 
 		</LinearLayout>
 
