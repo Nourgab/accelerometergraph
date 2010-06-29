@@ -175,19 +175,31 @@ public class MainActivity extends Activity {
 			Toast.makeText(MainActivity.this, data.getString("msg"),
 					Toast.LENGTH_SHORT).show();
 
-			// 描画再開
-			if (mAccelerometer != null) {
-				mSensorManager.registerListener(mSensorEventListener,
-						mAccelerometer, mSensorDelay);
-			}
-
-			if (!mDrawRoop) {
-				// グラフ描画再開
-				mDrawRoop = true;
-				mGraphView.surfaceCreated(mGraphView.getHolder());
-			}
+			startGraph();
 		}
 	};
+
+	private void startGraph() {
+		// センサーリスナーを登録
+		if (mAccelerometer != null) {
+			mSensorManager.registerListener(mSensorEventListener,
+					mAccelerometer, mSensorDelay);
+		}
+
+		if (!mDrawRoop) {
+			// グラフの描画を再開
+			mDrawRoop = true;
+			mGraphView.surfaceCreated(mGraphView.getHolder());
+		}
+	}
+	
+	private void stopGraph() {
+		// センサーリスナーを解除
+		mSensorManager.unregisterListener(mSensorEventListener);
+
+		// グラフの描画を止める
+		mDrawRoop = false;
+	}
 
 	/** Called when the activity is first created. */
 	@Override
@@ -261,11 +273,13 @@ public class MainActivity extends Activity {
 					});
 		}
 
+		// 値を格納するTextViewを取得
 		mAccValueViews[SensorManager.DATA_X] = (TextView) findViewById(R.id.accele_x_value);
 		mAccValueViews[SensorManager.DATA_Y] = (TextView) findViewById(R.id.accele_y_value);
 		mAccValueViews[SensorManager.DATA_Z] = (TextView) findViewById(R.id.accele_z_value);
 		mAccValueViews[DATA_R] = (TextView) findViewById(R.id.accele_r_value);
 
+		// Pass filter 選択ラジオボタンにリスナーを登録
 		RadioGroup passFilterGroup = (RadioGroup) findViewById(R.id.pass_filter);
 		passFilterGroup.check(R.id.pass_filter_raw);
 		passFilterGroup
@@ -286,9 +300,11 @@ public class MainActivity extends Activity {
 					}
 				});
 
+		// Filter rate 表示用TextViewを取得
 		mFilterRateView = (TextView) findViewById(R.id.filter_rate_value);
 		mFilterRateView.setText(String.valueOf(mFilterRate));
 
+		// Filter rate 変更シークバーにリスナーを登録
 		SeekBar filterRateBar = (SeekBar) findViewById(R.id.filter_rate);
 		filterRateBar.setMax(100);
 		filterRateBar.setProgress((int) (mFilterRate * 100));
@@ -332,17 +348,7 @@ public class MainActivity extends Activity {
 	protected void onResume() {
 		Log.i(TAG, "MainActivity.onResume()");
 
-		// センサーリスナーを登録
-		if (mAccelerometer != null) {
-			mSensorManager.registerListener(mSensorEventListener,
-					mAccelerometer, mSensorDelay);
-		}
-
-		if (!mDrawRoop) {
-			// グラフの描画を再開
-			mDrawRoop = true;
-			mGraphView.surfaceCreated(mGraphView.getHolder());
-		}
+		startGraph();
 
 		super.onResume();
 	}
@@ -351,14 +357,7 @@ public class MainActivity extends Activity {
 	protected void onPause() {
 		Log.i(TAG, "MainActivity.onPause()");
 
-		// センサーリスナーを解除
-		mSensorManager.unregisterListener(mSensorEventListener);
-
-		// グラフの描画を止める
-		mDrawRoop = false;
-
-		// 履歴をリセット
-		mHistory = new ConcurrentLinkedQueue<float[]>();
+		stopGraph();
 
 		super.onPause();
 	}
@@ -369,9 +368,6 @@ public class MainActivity extends Activity {
 
 		mSensorManager = null;
 		mAccelerometer = null;
-
-		// RAW履歴をリセット
-		mRawHistory = new ConcurrentLinkedQueue<float[]>();
 
 		super.onStop();
 	}
@@ -526,11 +522,8 @@ public class MainActivity extends Activity {
 					break;
 				}
 				// リスナーを再登録
-				mSensorManager.unregisterListener(mSensorEventListener);
-				if (mAccelerometer != null) {
-					mSensorManager.registerListener(mSensorEventListener,
-							mAccelerometer, mSensorDelay);
-				}
+				stopGraph();
+				startGraph();
 			}
 		});
 		dialogBuilder.show();
@@ -540,11 +533,8 @@ public class MainActivity extends Activity {
 		// レコーディングを停止
 		mRecording = false;
 
-		// センサーリスナー停止
-		mSensorManager.unregisterListener(mSensorEventListener);
-
-		// 描画停止
-		mDrawRoop = false;
+		// グラフ停止
+		stopGraph();
 
 		// プログレスダイアログを表示
 		showDialog(DIALOG_SAVE_PROGRESS);
